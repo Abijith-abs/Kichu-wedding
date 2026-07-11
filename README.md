@@ -1,37 +1,36 @@
-﻿# Kichu Weds Dathan 💍
-
-A cinematic South Indian wedding invitation website built with Next.js 16, Framer Motion, and Tailwind CSS v4.
-
-**Wedding Date:** February 14, 2027 · Madurai, Tamil Nadu  
-**Hashtag:** #MeenuWedsKarthik
-
----
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-`ash
-npm install
-npm run dev   # http://localhost:3000
-npm run build
-`
+First, run the development server:
 
-## Configuration
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-All content lives in `src/lib/constants.ts`.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Wedding photos
-Copy photos to `public/gallery/photo-1.jpg` through `photo-15.jpg`.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Background music
-Set `WEDDING.music.url` in `constants.ts` to your MP3 URL.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### RSVP → Google Sheets (Zapier)
-1. Create a Zap: Webhooks Catch Hook → Google Sheets Create Row
-2. Add to `.env.local`:
-   `NEXT_PUBLIC_ZAPIER_WEBHOOK_URL=https://hooks.zapier.com/hooks/catch/XXXX/`
+## Learn More
 
-## Deploy to Vercel
-Push to GitHub → connect to Vercel → add the env var in Vercel dashboard.
+To learn more about Next.js, take a look at the following resources:
 
-## Tech Stack
-Next.js 16, React 19, TypeScript, Tailwind v4, Framer Motion 12, GSAP 3, Lenis, React Hook Form
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
