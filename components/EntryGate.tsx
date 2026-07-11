@@ -12,11 +12,12 @@ export default function EntryGate({ onReveal }: EntryGateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [revealed, setRevealed] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
   const hasVideo = Boolean(WEDDING.media.entryVideoUrl);
 
-  // Pre-gate petal animation — only runs when there is no video
+  // Pre-gate petal animation — runs when video is not playing
   useEffect(() => {
-    if (hasVideo) return; // skip entirely in video mode
+    if (videoStarted) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -91,7 +92,7 @@ export default function EntryGate({ onReveal }: EntryGateProps) {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animId);
     };
-  }, [hasVideo]);
+  }, [videoStarted]);
 
   const doReveal = () => {
     if (revealed) return;
@@ -103,133 +104,154 @@ export default function EntryGate({ onReveal }: EntryGateProps) {
     onReveal();
   };
 
-  // In no-video mode, clicking the gate reveals the invitation
   const handleClick = () => {
-    if (!hasVideo && !revealed) doReveal();
+    if (revealed) return;
+
+    if (hasVideo) {
+      setVideoStarted(true);
+      if (videoRef.current) {
+        // Attempt playing unmuted first, fall back to muted, then reveal
+        videoRef.current.muted = false;
+        videoRef.current.play().catch((err) => {
+          console.warn("Unmuted video play blocked, falling back to muted play:", err);
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch((playErr) => {
+              console.error("Muted video play failed:", playErr);
+              doReveal();
+            });
+          }
+        });
+      }
+    } else {
+      doReveal();
+    }
   };
 
   return (
     <div
       ref={gateRef}
       className="entry-gate"
-      onClick={hasVideo ? undefined : handleClick}
-      role={hasVideo ? undefined : "button"}
-      aria-label={hasVideo ? undefined : "Open wedding invitation"}
+      onClick={handleClick}
+      role="button"
+      aria-label="Open wedding invitation"
     >
-      {/* ── Video mode: full-screen video only ── */}
-      {hasVideo ? (
+      {/* ── Video mode: full-screen video ── */}
+      {hasVideo && (
         <video
           ref={videoRef}
-          className="entry-gate-video playing"
+          className={`entry-gate-video ${videoStarted ? "playing" : ""}`}
           playsInline
-          autoPlay
-          muted
           onEnded={doReveal}
           onError={doReveal}
           style={{ zIndex: 2 }}
         >
           <source src={WEDDING.media.entryVideoUrl} type="video/mp4" />
         </video>
-      ) : (
-        <>
-          {/* Pre-gate golden petal canvas (no-video mode only) */}
-          <canvas
-            ref={canvasRef}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-          />
+      )}
 
-          {/* Decorative mandala rings (no-video mode only) */}
-          <div className="gate-mandala" style={{ zIndex: 1 }}>
-            <svg width="min(90vw, 600px)" height="min(90vw, 600px)" viewBox="0 0 600 600" fill="none">
-              <circle cx="300" cy="300" r="280" stroke="#C9972C" strokeWidth="0.5" opacity="0.5" />
-              <circle cx="300" cy="300" r="240" stroke="#C9972C" strokeWidth="0.3" opacity="0.4" />
-              <circle cx="300" cy="300" r="200" stroke="#C9972C" strokeWidth="0.5" opacity="0.35" />
-              <circle cx="300" cy="300" r="160" stroke="#E8C568" strokeWidth="0.4" opacity="0.3" />
-              {Array.from({ length: 16 }).map((_, i) => {
-                const angle = (i / 16) * Math.PI * 2;
-                const x = 300 + Math.cos(angle) * 260;
-                const y = 300 + Math.sin(angle) * 260;
-                return (
-                  <ellipse
-                    key={i}
-                    cx={x} cy={y} rx="6" ry="14"
-                    fill="#C9972C" opacity="0.25"
-                    transform={`rotate(${(i / 16) * 360 + 90}, ${x}, ${y})`}
-                  />
-                );
-              })}
-              {Array.from({ length: 8 }).map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
-                const x1 = 300 + Math.cos(angle) * 60;
-                const y1 = 300 + Math.sin(angle) * 60;
-                const x2 = 300 + Math.cos(angle) * 180;
-                const y2 = 300 + Math.sin(angle) * 180;
-                return (
-                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-                    stroke="#E8C568" strokeWidth="0.5" opacity="0.4"
-                  />
-                );
-              })}
-            </svg>
-          </div>
+      {/* Pre-gate golden petal canvas */}
+      {!videoStarted && (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+      )}
 
-          {/* Inner text content (no-video mode only) */}
-          <div className="gate-inner" style={{ zIndex: 3 }}>
-            <div style={{
-              position: "absolute", top: "1.5rem", left: "1.5rem", right: "1.5rem",
-              display: "flex", justifyContent: "space-between", pointerEvents: "none",
-            }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M2 38 L2 2 L38 2" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
-              </svg>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M38 38 L38 2 L2 2" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
-              </svg>
-            </div>
+      {/* Decorative mandala rings */}
+      {!videoStarted && (
+        <div className="gate-mandala" style={{ zIndex: 1 }}>
+          <svg width="min(90vw, 600px)" height="min(90vw, 600px)" viewBox="0 0 600 600" fill="none">
+            <circle cx="300" cy="300" r="280" stroke="#C9972C" strokeWidth="0.5" opacity="0.5" />
+            <circle cx="300" cy="300" r="240" stroke="#C9972C" strokeWidth="0.3" opacity="0.4" />
+            <circle cx="300" cy="300" r="200" stroke="#C9972C" strokeWidth="0.5" opacity="0.35" />
+            <circle cx="300" cy="300" r="160" stroke="#E8C568" strokeWidth="0.4" opacity="0.3" />
+            {Array.from({ length: 16 }).map((_, i) => {
+              const angle = (i / 16) * Math.PI * 2;
+              const x = 300 + Math.cos(angle) * 260;
+              const y = 300 + Math.sin(angle) * 260;
+              return (
+                <ellipse
+                  key={i}
+                  cx={x} cy={y} rx="6" ry="14"
+                  fill="#C9972C" opacity="0.25"
+                  transform={`rotate(${(i / 16) * 360 + 90}, ${x}, ${y})`}
+                />
+              );
+            })}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              const x1 = 300 + Math.cos(angle) * 60;
+              const y1 = 300 + Math.sin(angle) * 60;
+              const x2 = 300 + Math.cos(angle) * 180;
+              const y2 = 300 + Math.sin(angle) * 180;
+              return (
+                <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke="#E8C568" strokeWidth="0.5" opacity="0.4"
+                />
+              );
+            })}
+          </svg>
+        </div>
+      )}
 
-            <span className="gate-om">ॐ</span>
+      {/* Inner text content */}
+      <div className={`gate-inner ${videoStarted ? "hidden" : ""}`} style={{ zIndex: 3 }}>
+        <div style={{
+          position: "absolute", top: "1.5rem", left: "1.5rem", right: "1.5rem",
+          display: "flex", justifyContent: "space-between", pointerEvents: "none",
+        }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M2 38 L2 2 L38 2" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
+          </svg>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M38 38 L38 2 L2 2" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
+          </svg>
+        </div>
 
-            <div className="gate-names">
-              {WEDDING.bride.nickname}
-              <span style={{ display: "block", fontSize: "0.45em", fontFamily: "'Tenor Sans',sans-serif", letterSpacing: "0.3em", opacity: 0.6, margin: "0.2em 0" }}>
-                &amp;
-              </span>
-              {WEDDING.groom.name}
-            </div>
+        <span className="gate-om">ॐ</span>
 
-            <p className="gate-sub">You&apos;re Invited</p>
-            <p className="gate-date">{WEDDING.weddingDate.display} · {WEDDING.weddingDate.day}</p>
+        <div className="gate-names">
+          {WEDDING.bride.nickname}
+          <span style={{ display: "block", fontSize: "0.45em", fontFamily: "'Tenor Sans',sans-serif", letterSpacing: "0.3em", opacity: 0.6, margin: "0.2em 0" }}>
+            &amp;
+          </span>
+          {WEDDING.groom.name}
+        </div>
 
-            <div className="gate-tap">
-              <span>✦</span>
-              <span>Open Invitation</span>
-              <span>✦</span>
-            </div>
+        <p className="gate-sub">You&apos;re Invited</p>
+        <p className="gate-date">{WEDDING.weddingDate.display} · {WEDDING.weddingDate.day}</p>
 
-            <div style={{
-              position: "absolute", bottom: "1.5rem", left: "1.5rem", right: "1.5rem",
-              display: "flex", justifyContent: "space-between", pointerEvents: "none",
-            }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M2 2 L2 38 L38 38" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
-              </svg>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M38 2 L38 38 L2 38" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
-              </svg>
-            </div>
-          </div>
+        <div className="gate-tap">
+          <span>✦</span>
+          <span>Open Invitation</span>
+          <span>✦</span>
+        </div>
 
-          <p className="gate-petal-hint">
-            {WEDDING.hashtag}
-          </p>
-        </>
+        <div style={{
+          position: "absolute", bottom: "1.5rem", left: "1.5rem", right: "1.5rem",
+          display: "flex", justifyContent: "space-between", pointerEvents: "none",
+        }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M2 2 L2 38 L38 38" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
+          </svg>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M38 2 L38 38 L2 38" stroke="rgba(232,197,104,0.4)" strokeWidth="1.5" />
+          </svg>
+        </div>
+      </div>
+
+      {!videoStarted && (
+        <p className="gate-petal-hint">
+          {WEDDING.hashtag}
+        </p>
       )}
     </div>
   );
