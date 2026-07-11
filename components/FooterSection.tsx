@@ -83,7 +83,7 @@ export default function FooterSection() {
       {/* Instagram handle */}
       {WEDDING.instagramHandle !== "@yourhandle" && (
         <a
-          href={`https://instagram.com/${WEDDING.instagramHandle.replace("@", "")}`}
+          href={`https://instagram.com/${(WEDDING.instagramHandle as string).replace("@", "")}`}
           target="_blank"
           rel="noopener noreferrer"
           style={{
