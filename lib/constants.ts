@@ -45,7 +45,7 @@ export const WEDDING = {
   // ── Media (drop in your own URLs when ready) ────────────────
   media: {
     /** Full-screen entry gate intro video. Leave empty to use tap-to-reveal animation. */
-    entryVideoUrl: "",
+    entryVideoUrl: "/entry_opening.mp4",
     /** Background ambient music. Leave empty to disable the toggle. */
     bgMusicUrl: "",
     /** Highlight reel / memories section video. Leave empty to show placeholder. */
@@ -55,7 +55,7 @@ export const WEDDING = {
   // ── RSVP ────────────────────────────────────────────────────
   rsvp: {
     /** Paste your Zapier / backend webhook URL here to activate submissions. */
-    endpointUrl: "",
+    endpointUrl: "https://wedding-backend-k67l.onrender.com/api/rsvp",
     clientId: "kichu-dathan-wedding-2027",
   },
 
@@ -189,8 +189,8 @@ export const WEDDING = {
   // ── RSVP event options ───────────────────────────────────────
   rsvpEvents: [
     { value: "Nischayathartham", label: "Nischayathartham", date: "12th Feb, 11:00 AM" },
-    { value: "Haldi & Nalanga",  label: "Haldi & Nalanga",  date: "12th Feb, 4:00 PM" },
-    { value: "Sangeetham",       label: "Sangeetham",       date: "13th Feb, 6:30 PM" },
+    { value: "Haldi & Nalanga", label: "Haldi & Nalanga", date: "12th Feb, 4:00 PM" },
+    { value: "Sangeetham", label: "Sangeetham", date: "13th Feb, 6:30 PM" },
     { value: "Vivaha Muhurtham", label: "Vivaha Muhurtham", date: "14th Feb, 9:15 AM", defaultChecked: true },
     { value: "Reception & Sadhya", label: "Reception & Sadhya", date: "14th Feb, 7:00 PM", defaultChecked: true },
   ],

@@ -42,8 +42,15 @@ export default function RSVPSection() {
     setSubmitting(true);
 
     const form = e.currentTarget;
-    const data: Record<string, unknown> = Object.fromEntries(new FormData(form).entries());
+    const formData = new FormData(form);
+    const data: Record<string, any> = Object.fromEntries(formData.entries());
     data.clientId = WEDDING.rsvp.clientId;
+
+    // Handle multiple checkbox values for attending_events
+    const attendingEvents = formData.getAll("attending_events");
+    if (attendingEvents.length > 0) {
+      data.attending_events = attendingEvents;
+    }
 
     if (!WEDDING.rsvp.endpointUrl) {
       // Simulate success
@@ -62,9 +69,14 @@ export default function RSVPSection() {
         body: JSON.stringify(data),
       });
       const result = await res.json();
-      setModal(result.success ? "success" : "error");
-      if (result.success) { form.reset(); setStep(0); }
-    } catch {
+      const isSuccess = res.ok && (result.success || result.success === undefined);
+      setModal(isSuccess ? "success" : "error");
+      if (isSuccess) {
+        form.reset();
+        setStep(0);
+      }
+    } catch (err) {
+      console.error(err);
       setModal("error");
     } finally {
       setSubmitting(false);
@@ -186,7 +198,7 @@ export default function RSVPSection() {
                       type="checkbox"
                       name="attending_events"
                       value={ev.value}
-                      defaultChecked={ev.defaultChecked}
+                      defaultChecked={'defaultChecked' in ev ? ev.defaultChecked : false}
                     />
                   </label>
                 ))}
